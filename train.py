@@ -20,16 +20,13 @@ data = data.iloc[:, 1:]  # skip the 1 unimportant column
 x_data, y_data = data.iloc[:, :-1], data.iloc[:, -1] - 1
 x_data_arr = np.array(x_data)
 
-cls_names = ['seizure activity',
-             'EEG_tumor_area',
-             'EEG_healthy_brain_area',
-             'eyes closed',
-             'eyes open']
+# noramlization
+x_norm_data = min_max_norm2D(x_data_arr)
 
-# random data visiualizatin
-eeg_ids = np.random.randint(0, len(y_data), 9)
-for ind, eeg_id in enumerate(eeg_ids):
-    plt.subplot(3, 3, ind+1)
-    plt.plot(x_data_arr[eeg_id, :])
-    plt.title(cls_names[y_data[eeg_id]])
+# check normalization
+print(np.min(x_norm_data), np.max(x_norm_data))
+print(x_norm_data.shape, x_data_arr.shape)
+plt.plot(x_norm_data[100, :])
 plt.show()
+
+
