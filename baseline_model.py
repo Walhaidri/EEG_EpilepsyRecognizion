@@ -9,10 +9,11 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-import seaborn as sns
 from sklearn.linear_model import  LogisticRegression
 from sklearn import  metrics
 from utils.preprocess import min_max_norm2D
+from sklearn.multiclass import OneVsRestClassifier, OutputCodeClassifier
+from sklearn import svm
 
 # read the data
 row_data_folder = r'dataset\row_dataset'
@@ -41,7 +42,7 @@ plt.plot(x_norm_data[100, :])
 # plt.show()
 
 # dataset split to train, test
-X_train, X_test, y_train, y_test = train_test_split(input_data, out_data, random_state=2023, test_size=0.15)
+X_train, X_test, y_train, y_test = train_test_split(input_data, out_data, random_state=2023, test_size=0.2)
 print(f'train subet size: \t {X_train.shape[0]}')
 print(f'test subet size: \t {X_test.shape[0]}')
 
@@ -49,22 +50,24 @@ print(f'test subet size: \t {X_test.shape[0]}')
 log_reg_clf = LogisticRegression(multi_class='ovr')
 log_reg_clf.fit(X_train, y_train)
 predicted_logreg = log_reg_clf.predict(X_test)
-print(metrics.classification_report(y_test, predicted_logreg))
+clf_report = metrics.classification_report(y_test, predicted_logreg, output_dict=True)
+macro_averaged_f1 = round(clf_report['macro avg']['f1-score'], 2)
+print('macro_averaged_f1 for logistic regression : ', macro_averaged_f1)
 
-from sklearn.multiclass import OneVsRestClassifier, OutputCodeClassifier
-from sklearn import svm
-
+# SVM OneVsRestClassifier
 svm_model = OneVsRestClassifier(svm.SVC(random_state=42))
 svm_model.fit(input_data, out_data)
 svm_pred = svm_model.predict(X_test)
 
-print(metrics.classification_report(y_test, svm_pred))
+clf_report = metrics.classification_report(y_test, svm_pred, output_dict=True)
+macro_averaged_f1 = round(clf_report['macro avg']['f1-score'], 2)
+print('macro_averaged_f1 for SVM', macro_averaged_f1)
 
 #DecisionTreeClassifier
 from sklearn.tree import DecisionTreeClassifier
-
 clf = DecisionTreeClassifier()
 clf = clf.fit(input_data, out_data)
 tree_y_preds = clf.predict(X_test)
-print(metrics.classification_report(y_test, tree_y_preds))
-
+clf_report = metrics.classification_report(y_test, tree_y_preds, output_dict=True)
+macro_averaged_f1 = round(clf_report['macro avg']['f1-score'], 2)
+print('macro_averaged_f1 for DecisionTreeClassifier', macro_averaged_f1)
