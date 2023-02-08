@@ -123,13 +123,26 @@ feature_mtrx = pd.DataFrame(feature_mtrx)
 f_corr = feature_mtrx.corr()
 f_corr = np.array(f_corr)
 f_corr_2 = np.zeros_like(f_corr)
-for i in range(f_corr.shape[0]):
+features = []
+for i in range(1):
     for j in range(f_corr.shape[1]):
-        if f_corr[i, j] < 0:
+        if f_corr[i, j] < 0.4:
             f_corr_2[i, j] = -1
+            features.append(j)
+
+ftrs = np.loadtxt('features.txt')
+print(ftrs)
+np.savetxt('features_2.txt', features, fmt='%i', delimiter=',')
+non_corr_features = np.zeros((data.shape[0], len(ftrs)))
+print(non_corr_features.shape)
+for k in range(len(ftrs)):
+    non_corr_features[:, k] = x_data_arr[:, k]
+
+flname = r'dataset\preprocessed_dataset\non_corr_features.npy'
+np.save(flname, non_corr_features)
 sns.heatmap(f_corr_2)
 plt.title('features correlation heatmap')
-# plt.show()
+plt.show()
 
 # Соотношение эпиллепсии к другим классам
 bins = 50

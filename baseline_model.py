@@ -9,7 +9,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import  LogisticRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn import  metrics
 from utils.preprocess import min_max_norm2D
 from sklearn.multiclass import OneVsRestClassifier, OutputCodeClassifier
@@ -22,7 +22,7 @@ data = pd.read_csv(os.path.join(row_data_folder, data_file), skiprows=0)
 data = data.sort_values('y')
 print(data.head())
 data = data.iloc[:, 1:]  # skip the 1 unimportant column
-x_data, y_data = data.iloc[:, :-1], data.iloc[:, -1] - 1
+x_data, y_data = data.iloc[:-4600, :-1], data.iloc[:-4600, -1] - 1
 x_data_arr = np.array(x_data)
 
 cls_names = ['seizure activity',
@@ -35,6 +35,8 @@ cls_names = ['seizure activity',
 x_norm_data = min_max_norm2D(x_data_arr)
 input_data = x_norm_data
 out_data = np.array(y_data)
+out_data = np.zeros(len(out_data))
+out_data[2300:] = 1
 print(input_data.shape, out_data)
 # check normalization
 print(np.min(x_norm_data), np.max(x_norm_data))
@@ -56,12 +58,13 @@ print('macro_averaged_f1 for logistic regression : ', macro_averaged_f1)
 
 # SVM OneVsRestClassifier
 svm_model = OneVsRestClassifier(svm.SVC(random_state=42))
-svm_model.fit(input_data, out_data)
+svm_model.fit(X_train, y_train)
 svm_pred = svm_model.predict(X_test)
 
-clf_report = metrics.classification_report(y_test, svm_pred, output_dict=True)
-macro_averaged_f1 = round(clf_report['macro avg']['f1-score'], 2)
-print('macro_averaged_f1 for SVM', macro_averaged_f1)
+clf_report = metrics.classification_report(y_test, svm_pred, output_dict=False)
+print(clf_report)
+# macro_averaged_f1 = round(clf_report['macro avg']['f1-score'], 2)
+# print('macro_averaged_f1 for SVM', macro_averaged_f1)
 
 #DecisionTreeClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -71,3 +74,27 @@ tree_y_preds = clf.predict(X_test)
 clf_report = metrics.classification_report(y_test, tree_y_preds, output_dict=True)
 macro_averaged_f1 = round(clf_report['macro avg']['f1-score'], 2)
 print('macro_averaged_f1 for DecisionTreeClassifier', macro_averaged_f1)
+
+#======================================================
+#train on truncated features
+#===================================================
+ftrs = np.loadtxt('features_2.txt')
+non_corr_features = np.zeros((x_data_arr.shape[0], len(ftrs)))
+for k, l in enumerate(ftrs):
+    non_corr_features[:, k] = x_data_arr[:, int(l)]
+
+processed_data_norm_data = min_max_norm2D(non_corr_features)
+# dataset split to train, test
+X_train, X_test, y_train, y_test = train_test_split(processed_data_norm_data, out_data, random_state=2023, test_size=0.2)
+print(f'train subet size: \t {X_train.shape}')
+print(f'test subet size: \t {X_test.shape}')
+
+# SVM OneVsRestClassifier
+svm_model = OneVsRestClassifier(svm.SVC(random_state=42))
+svm_model.fit(X_train, y_train)
+svm_pred = svm_model.predict(X_test)
+
+clf_report = metrics.classification_report(y_test, svm_pred, output_dict=False)
+print(clf_report)
+# macro_averaged_f1 = round(clf_report['macro avg']['f1-score'], 2)
+# print('macro_averaged_f1 for SVM', macro_averaged_f1)
